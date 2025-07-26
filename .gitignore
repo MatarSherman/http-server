@@ -9,6 +9,7 @@ build/
 !**/src/test/**/build/
 *.class
 logs/
+.idea
 
 !gradle-wrapper.jar
 
