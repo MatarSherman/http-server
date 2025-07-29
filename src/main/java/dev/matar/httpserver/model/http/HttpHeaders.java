@@ -1,8 +1,10 @@
 package dev.matar.httpserver.model.http;
 
 import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
-public class HttpHeaders {
+public class HttpHeaders implements Iterable<Map.Entry<String, List<String>>> {
   private final Map<String, List<String>> map;
 
   public HttpHeaders() {
@@ -50,8 +52,17 @@ public class HttpHeaders {
     this.map.remove(key.toLowerCase());
   }
 
+  public Stream<Map.Entry<String, List<String>>> stream() {
+    return StreamSupport.stream(spliterator(), false);
+  }
+
   @Override
   public String toString() {
     return "HttpHeaders{" + map + '}';
+  }
+
+  @Override
+  public Iterator<Map.Entry<String, List<String>>> iterator() {
+    return this.map.entrySet().iterator();
   }
 }

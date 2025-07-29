@@ -17,7 +17,6 @@ public class BodySerializerRegistry {
     serializers.add(new StringBodySerializer());
     serializers.add(new BytesBodySerializer());
     serializers.add(new PrimitiveBodySerializer());
-    serializers.add(new StringBodySerializer());
     serializers.add(new StreamBodySerializer());
   }
 
@@ -38,9 +37,9 @@ public class BodySerializerRegistry {
   }
 
   /**
-   * The casting of body to < T > is logically safe,
-   * due to the "canSerialize" checks confirming the runtime type of body.
-   * */
+   * The casting of body to < T > is logically safe, due to the "canSerialize" checks confirming the
+   * runtime type of body.
+   */
   @SuppressWarnings("unchecked")
   private <T> void useSerializer(
       HttpBodySerializer<T> serializer,

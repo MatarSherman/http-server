@@ -150,9 +150,7 @@ class HttpRequestDeserializerTest {
         };
 
     assertThrows(
-        IOException.class,
-        () -> deserialize(failingStream),
-        "Should propagate IO Exceptions");
+        IOException.class, () -> deserialize(failingStream), "Should propagate IO Exceptions");
   }
 
   @Test

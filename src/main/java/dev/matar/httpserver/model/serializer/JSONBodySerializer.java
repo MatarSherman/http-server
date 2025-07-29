@@ -20,9 +20,14 @@ public class JSONBodySerializer implements HttpBodySerializer<Object> {
   @Override
   public void serialize(Object body, HttpResponse<?> response, OutputStream outputStream)
       throws IOException {
-    if (!response.hasHeader(HttpHeaderKey.CONTENT_TYPE.value())) {
+    if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
       outputStream.write(
-          HttpResponseSerializer.serializeHeader(HttpHeader.contentType(MimeType.JSON))
+          HttpResponseSerializer.serializeHeader(
+                  HttpHeader.contentType(
+                      MimeType.JSON.value()
+                          + HttpHeader.SUB_PARAM_SEPARATOR
+                          + "charset="
+                          + Constants.DEFAULT_CHARSET.name()))
               .getBytes(Constants.DEFAULT_CHARSET));
     }
     byte[] result = objectMapper.writeValueAsBytes(body);

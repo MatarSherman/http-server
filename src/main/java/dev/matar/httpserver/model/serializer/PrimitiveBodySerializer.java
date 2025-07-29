@@ -14,7 +14,7 @@ public class PrimitiveBodySerializer implements HttpBodySerializer<Object> {
   @Override
   public void serialize(Object body, HttpResponse<?> response, OutputStream outputStream)
       throws IOException {
-    if (!response.hasHeader(HttpHeaderKey.CONTENT_TYPE.value())) {
+    if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
       outputStream.write(
           HttpResponseSerializer.serializeHeader(HttpHeader.contentType(MimeType.TEXT_PLAIN))
               .getBytes(Constants.DEFAULT_CHARSET));

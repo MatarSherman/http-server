@@ -2,12 +2,8 @@ package dev.matar.httpserver.model.serializer;
 
 import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.exception.InvalidHttpResponseException;
-import dev.matar.httpserver.model.http.HttpHeader;
-import dev.matar.httpserver.model.http.HttpHeaderKey;
-import dev.matar.httpserver.model.http.HttpResponse;
-import dev.matar.httpserver.model.http.MimeType;
+import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.server.HttpResponseSerializer;
-import dev.matar.httpserver.util.HttpUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -20,10 +16,10 @@ public class StreamBodySerializer implements HttpBodySerializer<InputStream> {
   @Override
   public void serialize(InputStream body, HttpResponse<?> response, OutputStream outputStream)
       throws IOException, InvalidHttpResponseException {
-    Optional<HttpHeader> transferEncoding =
-        response.getHeader(HttpHeaderKey.TRANSFER_ENCODING.value());
+    Optional<String> transferEncoding =
+        response.getHeaders().getFirst(HttpHeaderKey.TRANSFER_ENCODING.value());
     if (transferEncoding.isPresent()) {
-      if (!HttpUtils.isTransferEncodingChunkedHeader(transferEncoding.get()))
+      if (!transferEncoding.get().equals(HttpHeaderValue.TRANSFER_ENC_CHUNKED.value()))
         throw new InvalidHttpResponseException(
             "ERROR: invalid Content-Type header value for stream type body.");
     } else {
@@ -32,15 +28,13 @@ public class StreamBodySerializer implements HttpBodySerializer<InputStream> {
                   new HttpHeader(HttpHeaderKey.TRANSFER_ENCODING.value(), "chunked"))
               .getBytes(Constants.DEFAULT_CHARSET));
     }
-
-    if (!response.hasHeader(HttpHeaderKey.CONTENT_TYPE.value())) {
+    if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
       outputStream.write(
           HttpResponseSerializer.serializeHeader(HttpHeader.contentType(MimeType.BINARY))
               .getBytes(Constants.DEFAULT_CHARSET));
     }
     HttpResponseSerializer.writeEndOfHeaders(outputStream);
     try (InputStream input = body) {
-      //      input.transferTo(outputStream);
       transferChunked(input, outputStream);
     }
   }

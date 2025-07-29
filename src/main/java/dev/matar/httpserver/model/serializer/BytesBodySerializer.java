@@ -13,8 +13,7 @@ public class BytesBodySerializer implements HttpBodySerializer<byte[]> {
   @Override
   public void serialize(byte[] body, HttpResponse<?> response, OutputStream outputStream)
       throws IOException {
-    if (response.getHeaders().stream()
-        .noneMatch(header -> header.key().equalsIgnoreCase(HttpHeaderKey.CONTENT_TYPE.value()))) {
+    if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
       outputStream.write(
           HttpResponseSerializer.serializeHeader(HttpHeader.contentType(MimeType.BINARY))
               .getBytes(Constants.DEFAULT_CHARSET));

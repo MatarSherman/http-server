@@ -34,11 +34,13 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
     Charset charset = Constants.DEFAULT_CHARSET;
     byte[] result;
 
-    Optional<HttpHeader> contentTypeHeader = response.getHeader(HttpHeaderKey.CONTENT_TYPE.value());
-    if (contentTypeHeader.isPresent()) {
-      String charsetName = contentTypeHeader.get().value().split(CHARSET_STRING_PARAM)[1];
-      if (Charset.isSupported(charsetName)) {
-        charset = Charset.forName(charsetName);
+    Optional<String> contentType =
+        response.getHeaders().getFirst(HttpHeaderKey.CONTENT_TYPE.value());
+    if (contentType.isPresent()) {
+      String[] splitContentType = contentType.get().split(CHARSET_STRING_PARAM);
+
+      if (splitContentType.length > 1 && Charset.isSupported(splitContentType[1])) {
+        charset = Charset.forName(splitContentType[1]);
       }
     }
     result = body.getBytes(charset);
@@ -52,10 +54,10 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
 
   @Override
   public boolean canSerialize(Object body, HttpResponse<?> response) {
-    Optional<HttpHeader> contentType = response.getHeader(HttpHeaderKey.CONTENT_TYPE.value());
+    Optional<String> contentType =
+        response.getHeaders().getFirst(HttpHeaderKey.CONTENT_TYPE.value());
     return body instanceof String
         && contentType.isPresent()
-        && mimeTypes.stream()
-            .anyMatch(mimeType -> mimeType.value().contains(contentType.get().value()));
+        && mimeTypes.stream().anyMatch(mimeType -> mimeType.value().contains(contentType.get()));
   }
 }
