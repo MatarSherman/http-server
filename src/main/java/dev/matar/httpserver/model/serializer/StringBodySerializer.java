@@ -1,10 +1,7 @@
 package dev.matar.httpserver.model.serializer;
 
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.model.http.HttpHeader;
-import dev.matar.httpserver.model.http.HttpHeaderKey;
-import dev.matar.httpserver.model.http.HttpResponse;
-import dev.matar.httpserver.model.http.MimeType;
+import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -30,17 +27,16 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
   @Override
   public void serialize(String body, HttpResponse<?> response, OutputStream outputStream)
       throws IOException {
-    final String CHARSET_STRING_PARAM = "charset=";
     Charset charset = Constants.DEFAULT_CHARSET;
     byte[] result;
 
     Optional<String> contentType =
         response.getHeaders().getFirst(HttpHeaderKey.CONTENT_TYPE.value());
     if (contentType.isPresent()) {
-      String[] splitContentType = contentType.get().split(CHARSET_STRING_PARAM);
+      Optional<String> charsetName = extractCharset(contentType.get());
 
-      if (splitContentType.length > 1 && Charset.isSupported(splitContentType[1])) {
-        charset = Charset.forName(splitContentType[1]);
+      if (charsetName.isPresent() && Charset.isSupported(charsetName.get())) {
+        charset = Charset.forName(charsetName.get());
       }
     }
     result = body.getBytes(charset);
@@ -52,12 +48,32 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
     outputStream.write(result);
   }
 
+  private Optional<String> extractCharset(String contentType) {
+    final String CHARSET_STRING_PARAM = "charset=";
+    String[] params = contentType.split(HttpHeader.SUB_PARAM_SEPARATOR);
+
+    for (String param : params) {
+      String normalized = param.trim().toLowerCase();
+      if (normalized.startsWith(CHARSET_STRING_PARAM)) {
+        return Optional.of(normalized.substring(CHARSET_STRING_PARAM.length()).replace("\"", ""));
+      }
+    }
+
+    return Optional.empty();
+  }
+
   @Override
   public boolean canSerialize(Object body, HttpResponse<?> response) {
     Optional<String> contentType =
         response.getHeaders().getFirst(HttpHeaderKey.CONTENT_TYPE.value());
+
+    if (contentType.isEmpty()) {
+      return false;
+    }
+    String contentTypeMime = contentType.get().split(HttpHeader.SUB_PARAM_SEPARATOR)[0].trim();
+
     return body instanceof String
-        && contentType.isPresent()
-        && mimeTypes.stream().anyMatch(mimeType -> mimeType.value().contains(contentType.get()));
+        && mimeTypes.stream()
+            .anyMatch(mimeType -> contentTypeMime.equalsIgnoreCase(mimeType.value()));
   }
 }
