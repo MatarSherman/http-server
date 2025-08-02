@@ -16,7 +16,12 @@ public class PrimitiveBodySerializer implements HttpBodySerializer<Object> {
       throws IOException {
     if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
       outputStream.write(
-          HttpResponseSerializer.serializeHeader(HttpHeader.contentType(MimeType.TEXT_PLAIN))
+          HttpResponseSerializer.serializeHeader(
+                  HttpHeader.contentType(
+                      MimeType.TEXT_PLAIN.value()
+                          + HttpHeader.SUB_PARAM_SEPARATOR
+                          + HttpHeader.CHARSET_PARAM_INDICATOR
+                          + Constants.DEFAULT_CHARSET.name()))
               .getBytes(Constants.DEFAULT_CHARSET));
     }
     byte[] result = String.valueOf(body).getBytes(Constants.DEFAULT_CHARSET);

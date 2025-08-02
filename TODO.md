@@ -21,7 +21,7 @@ This project is in progress, here are some of the current goals/tasks.
   end-user should handle if-match header.
 - [ ] Add handling for Http HEAD method requests
 - [ ] Add validation for HttpResponse: for the status code and message
-- [ ] Use charset in Content-Type header for String and JSON bodies
+- [x] Use charset in Content-Type header for String and JSON bodies
 - [ ] Remove body serialization for Http responses with status codes: 1xx, 204, 205, 304
 - [ ] Add date header to serialization
 - [ ] Make sure serializer accounts for duplicate headers (due to the headers-map change)

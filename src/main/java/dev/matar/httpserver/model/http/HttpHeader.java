@@ -4,6 +4,7 @@ public record HttpHeader(String key, String value) {
   public static final String KEY_VALUE_SEPARATOR = ": ";
   public static final String MULTI_VALUE_SEPARATOR = ", ";
   public static final String SUB_PARAM_SEPARATOR = "; ";
+  public static final String CHARSET_PARAM_INDICATOR = "charset=";
 
   public String toRaw() {
     return key + KEY_VALUE_SEPARATOR + value;

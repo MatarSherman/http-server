@@ -21,11 +21,13 @@ public class StreamBodySerializer implements HttpBodySerializer<InputStream> {
     if (transferEncoding.isPresent()) {
       if (!transferEncoding.get().equals(HttpHeaderValue.TRANSFER_ENC_CHUNKED.value()))
         throw new InvalidHttpResponseException(
-            "ERROR: invalid Content-Type header value for stream type body.");
+            "ERROR: invalid Transfer-Encoding header value for stream type body.");
     } else {
       outputStream.write(
           HttpResponseSerializer.serializeHeader(
-                  new HttpHeader(HttpHeaderKey.TRANSFER_ENCODING.value(), "chunked"))
+                  new HttpHeader(
+                      HttpHeaderKey.TRANSFER_ENCODING.value(),
+                      HttpHeaderValue.TRANSFER_ENC_CHUNKED.value()))
               .getBytes(Constants.DEFAULT_CHARSET));
     }
     if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
