@@ -24,6 +24,7 @@ public class BodySerializerRegistry {
       throws IOException, InvalidHttpResponseException {
     Object body = response.getBody();
     if (body == null) {
+      HttpResponseSerializer.writeEndOfHeaders(outputStream);
       return;
     }
 
