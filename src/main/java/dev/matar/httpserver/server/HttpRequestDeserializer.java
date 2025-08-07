@@ -1,8 +1,8 @@
 package dev.matar.httpserver.server;
 
 import dev.matar.httpserver.config.Constants;
+import dev.matar.httpserver.exception.HttpDeserializationException;
 import dev.matar.httpserver.exception.HttpRequestSizeLimitException;
-import dev.matar.httpserver.exception.InvalidHttpRequestException;
 import dev.matar.httpserver.exception.ReadLimitException;
 import dev.matar.httpserver.model.http.HttpHeader;
 import dev.matar.httpserver.model.http.HttpHeaderKey;
@@ -19,7 +19,7 @@ public class HttpRequestDeserializer {
   public static final int MAX_BODY_SIZE = 1_048_576;
 
   public static Optional<HttpRequest> deserialize(final InputStream socketInput)
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     HttpRequest.Builder builder = HttpRequest.builder();
     RequestMetadata metadata = new RequestMetadata(-1, false, false);
     final HttpStreamReader httpStreamReader = new HttpStreamReader(socketInput);
@@ -53,14 +53,14 @@ public class HttpRequestDeserializer {
   }
 
   private static void deserializeFirstLine(String firstLine, HttpRequest.Builder builder)
-      throws InvalidHttpRequestException {
+      throws HttpDeserializationException {
     HTTPReqFirstLine requestDefinition = new HTTPReqFirstLine(firstLine);
 
     try {
       HttpMethod method = HttpMethod.valueOf(requestDefinition.method);
       builder.method(method);
     } catch (IllegalArgumentException e) {
-      throw new InvalidHttpRequestException("ERROR: illegal HTTP request method", e);
+      throw new HttpDeserializationException("ERROR: illegal HTTP request method", e);
     }
 
     builder.path(requestDefinition.path);
@@ -73,7 +73,7 @@ public class HttpRequestDeserializer {
       RequestMetadata metadata,
       int maxBytes,
       boolean isTrailing)
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     try {
       Optional<HttpHeader> optionalHeader;
       int bytesReadCount = 0;
@@ -102,9 +102,9 @@ public class HttpRequestDeserializer {
   }
 
   private static Optional<HttpHeader> deserializeHeaderLine(ByteArrayOutputStream bytes)
-      throws InvalidHttpRequestException {
+      throws HttpDeserializationException {
     if (bytes == null) {
-      throw new InvalidHttpRequestException("ERROR: unexpected end of stream in request headers");
+      throw new HttpDeserializationException("ERROR: unexpected end of stream in request headers");
     }
     if (bytes.size() == 0) {
       return Optional.empty();
@@ -113,13 +113,13 @@ public class HttpRequestDeserializer {
     String[] splitHeader = bytes.toString(Constants.DEFAULT_CHARSET).split(HEADER_SPLIT_REGEX, 2);
 
     if (splitHeader.length != 2) {
-      throw new InvalidHttpRequestException("ERROR: illegal header format: " + bytes);
+      throw new HttpDeserializationException("ERROR: illegal header format: " + bytes);
     }
     return Optional.of(new HttpHeader(splitHeader[0], splitHeader[1]));
   }
 
   private static void saveRequestMetadata(RequestMetadata metadata, HttpHeader header)
-      throws InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws HttpDeserializationException, HttpRequestSizeLimitException {
     try {
       if (HttpUtils.isContentLengthHeader(header)) {
         int newContentLength = Integer.parseInt(header.value());
@@ -135,18 +135,18 @@ public class HttpRequestDeserializer {
         metadata.hasTrailingHeaders = true;
       }
     } catch (NumberFormatException e) {
-      throw new InvalidHttpRequestException(
+      throw new HttpDeserializationException(
           "ERROR: illegal Content-Length header value, received: " + header.value(), e);
     }
   }
 
   private static byte[] deserializeBodyContinuous(HttpStreamReader input, int bodyLength)
-      throws IOException, InvalidHttpRequestException {
+      throws IOException, HttpDeserializationException {
     byte[] body = new byte[bodyLength];
     int bytesRead = input.readBytes(body);
 
     if (bytesRead < bodyLength) {
-      throw new InvalidHttpRequestException(
+      throw new HttpDeserializationException(
           "ERROR: request body is smaller than Content-Length specification, expected: "
               + bodyLength
               + " received: "
@@ -156,7 +156,7 @@ public class HttpRequestDeserializer {
   }
 
   private static byte[] deserializeBodyChunked(HttpStreamReader reader)
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     final ByteArrayOutputStream bodyAccumulator = new ByteArrayOutputStream();
     ByteArrayOutputStream currLine = null;
     int chunkLength;
@@ -166,7 +166,7 @@ public class HttpRequestDeserializer {
       do {
         currLine = reader.readLineRaw(MAX_BODY_SIZE - totalBytesReadCount);
         if (currLine == null || currLine.size() == 0) {
-          throw new InvalidHttpRequestException("ERROR: malformed chunked body of HTTP request");
+          throw new HttpDeserializationException("ERROR: malformed chunked body of HTTP request");
         }
         totalBytesReadCount += currLine.size();
         chunkLength = Integer.parseInt(currLine.toString(Constants.DEFAULT_CHARSET).trim(), 16);
@@ -179,7 +179,7 @@ public class HttpRequestDeserializer {
         totalBytesReadCount += bytesReadForChunk;
 
         if (bytesReadForChunk < chunkLength) {
-          throw new InvalidHttpRequestException(
+          throw new HttpDeserializationException(
               "ERROR: chunk smaller than chunk size in chunked body, expected: "
                   + chunkLength
                   + " received: "
@@ -189,7 +189,7 @@ public class HttpRequestDeserializer {
         if (chunkLength > 0) {
           String lineEnd = reader.readLine();
           if (!lineEnd.isEmpty()) {
-            throw new InvalidHttpRequestException(
+            throw new HttpDeserializationException(
                 "ERROR: chunk size smaller than actual chunk in chunked body, expected: "
                     + chunkLength
                     + " received: "
@@ -200,7 +200,7 @@ public class HttpRequestDeserializer {
 
       return bodyAccumulator.toByteArray();
     } catch (NumberFormatException e) {
-      throw new InvalidHttpRequestException(
+      throw new HttpDeserializationException(
           "ERROR: invalid chunk size in chunked body: "
               + (currLine != null ? currLine.toString().trim() : null),
           e);
@@ -227,11 +227,11 @@ public class HttpRequestDeserializer {
     public final String path;
     public final String version;
 
-    public HTTPReqFirstLine(String rawFirstLine) throws InvalidHttpRequestException {
+    public HTTPReqFirstLine(String rawFirstLine) throws HttpDeserializationException {
       final String HTTP_FIRST_LINE_SEPARATOR = " ";
       String[] data = rawFirstLine.split(HTTP_FIRST_LINE_SEPARATOR);
       if (data.length != 3) {
-        throw new InvalidHttpRequestException(
+        throw new HttpDeserializationException(
             "ERROR: Malformed HTTP request first line. Expected: \"METHOD path version\" found: "
                 + rawFirstLine);
       }

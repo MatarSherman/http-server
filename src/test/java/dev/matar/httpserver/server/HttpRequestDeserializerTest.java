@@ -4,8 +4,8 @@ import static dev.matar.httpserver.server.HttpRequestDeserializer.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 import dev.matar.httpserver.config.Constants;
+import dev.matar.httpserver.exception.HttpDeserializationException;
 import dev.matar.httpserver.exception.HttpRequestSizeLimitException;
-import dev.matar.httpserver.exception.InvalidHttpRequestException;
 import dev.matar.httpserver.model.http.HttpHeader;
 import dev.matar.httpserver.model.http.HttpHeaderKey;
 import dev.matar.httpserver.model.http.HttpRequest;
@@ -26,7 +26,7 @@ class HttpRequestDeserializerTest {
 
   @Test
   void shouldParseValidReqNoBody()
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     String requestString =
         String.join(" ", VALID_REQ_FIRST_LINE)
             + Constants.HTTP_CRLF
@@ -63,7 +63,7 @@ class HttpRequestDeserializerTest {
 
   @Test
   void shouldParseValidContinuousBody()
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     String bodyString = "Hello World!";
     byte[] bodyBytes = bodyString.getBytes(Constants.DEFAULT_CHARSET);
     HttpHeader contentLength = HttpHeader.contentLength(bodyBytes.length);
@@ -93,7 +93,7 @@ class HttpRequestDeserializerTest {
 
   @Test
   void shouldParseValidChunkedBody()
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     String[] bodyWords = new String[] {"Matar", "Sherman"};
     byte[][] bodyBytes = new byte[][] {bodyWords[0].getBytes(), bodyWords[1].getBytes()};
 
@@ -131,7 +131,7 @@ class HttpRequestDeserializerTest {
 
   @Test
   void shouldHandleEmptyRequest()
-      throws IOException, InvalidHttpRequestException, HttpRequestSizeLimitException {
+      throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     InputStream inputStream = new ByteArrayInputStream(new byte[0]);
 
     Optional<HttpRequest> request = deserialize(inputStream);
@@ -162,17 +162,17 @@ class HttpRequestDeserializerTest {
     assertAll(
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(tooShort)),
                 "Should throw if first line too short"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(tooLong)),
                 "Should throw if first line too long"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(invalidMethod)),
                 "Should throw if method is invalidZ"));
   }
@@ -188,12 +188,12 @@ class HttpRequestDeserializerTest {
     assertAll(
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(missingEndOfHeaders)),
                 "Should throw when end of headers is missing"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(invalidHeaderFormat)),
                 "Should throw when a header has an invalid format"));
   }
@@ -219,12 +219,12 @@ class HttpRequestDeserializerTest {
     assertAll(
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(contentLengthBiggerThanBody)),
                 "Should throw when Content-Length is bigger than the size of the body"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(contentLengthNotInteger)),
                 "Should throw when Content-Length is not an integer"));
   }
@@ -278,27 +278,27 @@ class HttpRequestDeserializerTest {
     assertAll(
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(unexpectedEOF)),
                 "Should throw on unexpected end of stream"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(unexpectedEndOfBody)),
                 "Should throw on unexpected end of body"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(illegalChunkSize)),
                 "should throw on illegal (non hexadecimal) chunk size"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(chunkSizeTooBig)),
                 "Should throw when chunk size is bigger than actual chunk"),
         () ->
             assertThrows(
-                InvalidHttpRequestException.class,
+                HttpDeserializationException.class,
                 () -> deserialize(getReqInputStream(chunkSizeTooSmall)),
                 "Should throw when chunk size is smaller than actual chunk"));
   }
