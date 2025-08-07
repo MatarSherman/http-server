@@ -1,17 +1,17 @@
 package dev.matar.httpserver.server;
 
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.exception.InvalidHttpResponseException;
+import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.HttpHeader;
 import dev.matar.httpserver.model.http.HttpResponse;
-import dev.matar.httpserver.model.serializer.BodySerializerRegistry;
+import dev.matar.httpserver.server.serializer.BodySerializerRegistry;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
 
 public class HttpResponseSerializer {
   public static void serialize(HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, InvalidHttpResponseException {
+      throws IOException, HttpSerializationException {
     StringBuilder builder =
         new StringBuilder()
             .append(Constants.HTTP_VERSION + " ")

@@ -17,6 +17,13 @@ public class HttpResponse<T> {
     this.body = body;
   }
 
+  public HttpResponse(HttpResponse<T> response) {
+    this.status = response.getStatus();
+    this.message = response.getMessage();
+    this.body = response.getBody();
+    this.headers = new HttpHeaders(response.getHeaders());
+  }
+
   public int getStatus() {
     return status;
   }
@@ -43,5 +50,20 @@ public class HttpResponse<T> {
 
   public void setBody(T body) {
     this.body = body;
+  }
+
+  @Override
+  public String toString() {
+    return "HttpResponse{"
+        + "status="
+        + status
+        + ", message='"
+        + message
+        + '\''
+        + ", headers="
+        + headers
+        + ", body="
+        + body
+        + '}';
   }
 }

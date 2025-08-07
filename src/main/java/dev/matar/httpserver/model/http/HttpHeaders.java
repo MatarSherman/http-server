@@ -18,13 +18,7 @@ public class HttpHeaders implements Iterable<Map.Entry<String, List<String>>> {
 
   public HttpHeaders(HttpHeaders headers) {
     this();
-    headers
-        .getInternalMap()
-        .forEach((key, values) -> this.map.put(key.toLowerCase(), new ArrayList<>(values)));
-  }
-
-  private Map<String, List<String>> getInternalMap() {
-    return this.map;
+    headers.map.forEach((key, values) -> this.map.put(key.toLowerCase(), new ArrayList<>(values)));
   }
 
   public Optional<List<String>> get(String key) {
@@ -42,6 +36,10 @@ public class HttpHeaders implements Iterable<Map.Entry<String, List<String>>> {
 
   public void add(String key, String value) {
     this.map.computeIfAbsent(key.toLowerCase(), _ -> new ArrayList<>()).add(value);
+  }
+
+  public void set(String key, String value) {
+    this.map.put(key.toLowerCase(), new ArrayList<>(List.of(value)));
   }
 
   public boolean containsKey(String key) {
@@ -64,5 +62,12 @@ public class HttpHeaders implements Iterable<Map.Entry<String, List<String>>> {
   @Override
   public Iterator<Map.Entry<String, List<String>>> iterator() {
     return this.map.entrySet().iterator();
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) return false;
+    HttpHeaders other = (HttpHeaders) o;
+    return Objects.equals(map, other.map);
   }
 }
