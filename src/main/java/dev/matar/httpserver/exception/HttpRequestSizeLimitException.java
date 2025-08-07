@@ -1,5 +1,7 @@
 package dev.matar.httpserver.exception;
 
+import dev.matar.httpserver.model.http.HttpStatus;
+
 public class HttpRequestSizeLimitException extends Exception {
   public enum Section {
     BODY,
@@ -16,9 +18,9 @@ public class HttpRequestSizeLimitException extends Exception {
 
   public int getHttpStatus() {
     return switch (oversizedSection) {
-      case FIRST_LINE -> 414;
-      case HEADERS -> 431;
-      case BODY -> 413;
+      case FIRST_LINE -> HttpStatus.URI_TOO_LONG.code();
+      case HEADERS -> HttpStatus.HEADERS_TOO_LARGE.code();
+      case BODY -> HttpStatus.CONTENT_TOO_LARGE.code();
     };
   }
 }
