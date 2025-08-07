@@ -56,16 +56,16 @@ public class HttpRequest {
     return headers;
   }
 
-  public void addHeader(String key, String value) {
-    this.headers.add(key, value);
-  }
-
   public byte[] getBody() {
     return body;
   }
 
   public void setBody(byte[] body) {
     this.body = body;
+  }
+
+  public HttpHeaders getTrailingHeaders() {
+    return trailingHeaders;
   }
 
   @Override
@@ -124,7 +124,7 @@ public class HttpRequest {
     }
 
     public Builder addTrailingHeader(String key, String value) {
-      this.headers.add(key, value);
+      this.trailingHeaders.add(key, value);
       return this;
     }
 

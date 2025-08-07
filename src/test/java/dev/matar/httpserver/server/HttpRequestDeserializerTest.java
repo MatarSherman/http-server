@@ -126,7 +126,9 @@ class HttpRequestDeserializerTest {
     assertArrayEquals(
         String.join("", bodyWords).getBytes(), request.getBody(), "Should parse chunked body");
     assertEquals(
-        trailingHeader.value(), request.getHeaders().getFirst(trailingHeader.key()).orElse(null));
+        trailingHeader.value(),
+        request.getTrailingHeaders().getFirst(trailingHeader.key()).orElse(null),
+        "Should parse trailing headers after chunked body");
   }
 
   @Test
