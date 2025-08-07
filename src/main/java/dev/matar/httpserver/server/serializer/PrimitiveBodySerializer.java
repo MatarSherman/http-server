@@ -1,6 +1,5 @@
-package dev.matar.httpserver.model.serializer;
+package dev.matar.httpserver.server.serializer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.model.http.HttpHeader;
 import dev.matar.httpserver.model.http.HttpHeaderKey;
@@ -10,12 +9,7 @@ import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class JSONBodySerializer implements HttpBodySerializer<Object> {
-  private final ObjectMapper objectMapper;
-
-  public JSONBodySerializer() {
-    this.objectMapper = new ObjectMapper();
-  }
+public class PrimitiveBodySerializer implements HttpBodySerializer<Object> {
 
   @Override
   public void serialize(Object body, HttpResponse<?> response, OutputStream outputStream)
@@ -24,13 +18,13 @@ public class JSONBodySerializer implements HttpBodySerializer<Object> {
       outputStream.write(
           HttpResponseSerializer.serializeHeader(
                   HttpHeader.contentType(
-                      MimeType.JSON.value()
+                      MimeType.TEXT_PLAIN.value()
                           + HttpHeader.SUB_PARAM_SEPARATOR
-                          + "charset="
+                          + HttpHeader.CHARSET_PARAM_INDICATOR
                           + Constants.DEFAULT_CHARSET.name()))
               .getBytes(Constants.DEFAULT_CHARSET));
     }
-    byte[] result = objectMapper.writeValueAsBytes(body);
+    byte[] result = String.valueOf(body).getBytes(Constants.DEFAULT_CHARSET);
 
     outputStream.write(
         HttpResponseSerializer.serializeHeader(HttpHeader.contentLength(result.length))
@@ -41,6 +35,6 @@ public class JSONBodySerializer implements HttpBodySerializer<Object> {
 
   @Override
   public boolean canSerialize(Object body, HttpResponse<?> response) {
-    return true;
+    return body instanceof Number || body instanceof Boolean || body instanceof Character;
   }
 }

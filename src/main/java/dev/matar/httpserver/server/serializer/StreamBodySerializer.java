@@ -1,7 +1,6 @@
-package dev.matar.httpserver.model.serializer;
+package dev.matar.httpserver.server.serializer;
 
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.exception.InvalidHttpResponseException;
 import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
@@ -15,21 +14,7 @@ public class StreamBodySerializer implements HttpBodySerializer<InputStream> {
 
   @Override
   public void serialize(InputStream body, HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, InvalidHttpResponseException {
-    Optional<String> transferEncoding =
-        response.getHeaders().getFirst(HttpHeaderKey.TRANSFER_ENCODING.value());
-    if (transferEncoding.isPresent()) {
-      if (!transferEncoding.get().equals(HttpHeaderValue.TRANSFER_ENC_CHUNKED.value()))
-        throw new InvalidHttpResponseException(
-            "ERROR: invalid Transfer-Encoding header value for stream type body.");
-    } else {
-      outputStream.write(
-          HttpResponseSerializer.serializeHeader(
-                  new HttpHeader(
-                      HttpHeaderKey.TRANSFER_ENCODING.value(),
-                      HttpHeaderValue.TRANSFER_ENC_CHUNKED.value()))
-              .getBytes(Constants.DEFAULT_CHARSET));
-    }
+      throws IOException {
     if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {
       outputStream.write(
           HttpResponseSerializer.serializeHeader(HttpHeader.contentType(MimeType.BINARY))
@@ -59,6 +44,11 @@ public class StreamBodySerializer implements HttpBodySerializer<InputStream> {
 
   @Override
   public boolean canSerialize(Object body, HttpResponse<?> response) {
-    return body instanceof InputStream;
+    Optional<String> transferEncoding =
+        response.getHeaders().getFirst(HttpHeaderKey.TRANSFER_ENCODING.value());
+
+    return body instanceof InputStream
+        && transferEncoding.isPresent()
+        && transferEncoding.get().equals(HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
   }
 }

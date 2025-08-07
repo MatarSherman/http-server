@@ -1,4 +1,4 @@
-package dev.matar.httpserver.model.serializer;
+package dev.matar.httpserver.server.serializer;
 
 import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.model.http.*;

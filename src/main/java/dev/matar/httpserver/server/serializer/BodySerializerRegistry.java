@@ -1,7 +1,8 @@
-package dev.matar.httpserver.model.serializer;
+package dev.matar.httpserver.server.serializer;
 
-import dev.matar.httpserver.exception.InvalidHttpResponseException;
+import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.HttpResponse;
+import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -21,13 +22,12 @@ public class BodySerializerRegistry {
   }
 
   public void serialize(HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, InvalidHttpResponseException {
+      throws IOException, HttpSerializationException {
     Object body = response.getBody();
     if (body == null) {
       HttpResponseSerializer.writeEndOfHeaders(outputStream);
       return;
     }
-
     HttpBodySerializer<?> serializer =
         serializers.stream()
             .filter(curr -> curr.canSerialize(body, response))
@@ -47,7 +47,7 @@ public class BodySerializerRegistry {
       Object body,
       HttpResponse<?> response,
       OutputStream outputStream)
-      throws IOException, InvalidHttpResponseException {
+      throws IOException, HttpSerializationException {
     serializer.serialize((T) body, response, outputStream);
   }
 
