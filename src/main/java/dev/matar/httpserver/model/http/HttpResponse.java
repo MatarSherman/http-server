@@ -12,6 +12,10 @@ public class HttpResponse<T> {
     this.headers = new HttpHeaders();
   }
 
+  public HttpResponse(HttpStatus status, String message) {
+    this(status.code(), message);
+  }
+
   public HttpResponse(int status, String message, T body) {
     this(status, message);
     this.body = body;
