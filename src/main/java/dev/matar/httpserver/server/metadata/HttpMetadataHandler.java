@@ -32,10 +32,16 @@ public class HttpMetadataHandler {
   }
 
   private static void setHeadersByBody(HttpResponse<?> response) {
-    if (response.getBody() instanceof InputStream
-        && !response.getHeaders().containsKey(HttpHeaderKey.TRANSFER_ENCODING.value())) {
+    if (response.getBody() == null) {
+      configureNoBodyResponse(response);
+    } else if (response.getBody() instanceof InputStream
+        && (!response.getHeaders().containsKey(HttpHeaderKey.TRANSFER_ENCODING.value()))) {
       configureInputStreamResponse(response);
     }
+  }
+
+  private static void configureNoBodyResponse(HttpResponse<?> response) {
+    response.getHeaders().set(HttpHeaderKey.CONTENT_LENGTH.value(), "" + 0);
   }
 
   private static void configureInputStreamResponse(HttpResponse<?> response) {
@@ -44,4 +50,3 @@ public class HttpMetadataHandler {
         .set(HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
   }
 }
-
