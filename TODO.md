@@ -4,9 +4,12 @@ This project is in progress, here are some of the current goals/tasks.
 
 ## Tasks
 
+- [ ] Add trailing headers support to responses
+- [ ] Add encoding to serialization flow
 - [ ] Add middlewares functionality
+- [ ] Add automatic security headers
 - [ ] Add HTTPS configuration (probably using JSSE SSLServerSocket)
-- [ ] Make deserializer return 400 for invalid http requests (InvalidHttpRequestException)
+- [x] Make deserializer return 400 for invalid http requests (InvalidHttpRequestException)
 - [ ] Add support for websockets
 - [ ] Add support for SSE
 - [ ] Add handling for OPTION requests and cors
@@ -23,8 +26,7 @@ This project is in progress, here are some of the current goals/tasks.
 - [ ] Add validation for HttpResponse: for the status code and message
 - [x] Use charset in Content-Type header for String and JSON bodies
 - [ ] Remove body serialization for Http responses with status codes: 1xx, 204, 205, 304
-- [ ] Add date header to serialization
-- [ ] Make sure serializer accounts for duplicate headers (due to the headers-map change)
+- [x] Add date header to serialization
 - [ ] Add graceful shutdown
 - [ ] Add an environment-variables/configuration file (PORT, timeout, etc...)
 - [ ] Add documentation
@@ -33,7 +35,7 @@ This project is in progress, here are some of the current goals/tasks.
 - [ ] Add project-wide meaningful comments
 - [ ] Add url path params deserialization
 - [x] Add 404 not found default route
-- [ ] Send 500 status response on internal error
+- [x] Send 500 status response on internal error
 - [ ] Change deserialization flow to start by deserializing
   the path+method, then check against defined routes, then
   continue flow if the route exists
