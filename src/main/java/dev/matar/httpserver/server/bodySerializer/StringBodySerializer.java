@@ -1,6 +1,7 @@
-package dev.matar.httpserver.server.serializer;
+package dev.matar.httpserver.server.bodySerializer;
 
 import dev.matar.httpserver.config.Constants;
+import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
@@ -26,24 +27,26 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
 
   @Override
   public void serialize(String body, HttpResponse<?> response, OutputStream outputStream)
-      throws IOException {
+      throws IOException, HttpSerializationException {
     Charset charset = Constants.DEFAULT_CHARSET;
-    byte[] result;
-
-    Optional<String> contentType =
-        response.getHeaders().getFirst(HttpHeaderKey.CONTENT_TYPE.value());
-    if (contentType.isPresent()) {
-      Optional<String> charsetName = extractCharset(contentType.get());
-
-      if (charsetName.isPresent() && Charset.isSupported(charsetName.get())) {
-        charset = Charset.forName(charsetName.get());
-      }
+    String contentType =
+        response
+            .getHeaders()
+            .getFirst(HttpHeaderKey.CONTENT_TYPE.value())
+            .orElseThrow(
+                () ->
+                    new HttpSerializationException(
+                        "ERROR: String body serialization executed without content-type header"));
+    Optional<String> charsetName = extractCharset(contentType);
+    if (charsetName.isPresent() && Charset.isSupported(charsetName.get())) {
+      charset = Charset.forName(charsetName.get());
     }
-    result = body.getBytes(charset);
 
-    outputStream.write(
-        HttpResponseSerializer.serializeHeader(HttpHeader.contentLength(result.length))
-            .getBytes(Constants.DEFAULT_CHARSET));
+    byte[] result;
+    result = body.getBytes(charset);
+    HttpResponseSerializer.writeHeader(
+        outputStream, HttpHeaderKey.CONTENT_LENGTH.value(), result.length + "");
+
     HttpResponseSerializer.writeEndOfHeaders(outputStream);
     outputStream.write(result);
   }
@@ -66,7 +69,6 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
   public boolean canSerialize(Object body, HttpResponse<?> response) {
     Optional<String> contentType =
         response.getHeaders().getFirst(HttpHeaderKey.CONTENT_TYPE.value());
-
     if (contentType.isEmpty()) {
       return false;
     }

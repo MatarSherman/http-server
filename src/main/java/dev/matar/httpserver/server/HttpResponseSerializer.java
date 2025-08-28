@@ -3,8 +3,9 @@ package dev.matar.httpserver.server;
 import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.HttpHeader;
+import dev.matar.httpserver.model.http.HttpHeaders;
 import dev.matar.httpserver.model.http.HttpResponse;
-import dev.matar.httpserver.server.serializer.BodySerializerRegistry;
+import dev.matar.httpserver.server.bodySerializer.BodySerializerRegistry;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.List;
@@ -29,7 +30,7 @@ public class HttpResponseSerializer {
     StringBuilder stringBuilder = new StringBuilder();
 
     writeFirstLine(stringBuilder, response);
-    writeHeaders(stringBuilder, response);
+    writeHeaders(stringBuilder, response.getHeaders());
 
     outputStream.write(stringBuilder.toString().getBytes(Constants.DEFAULT_CHARSET));
   }
@@ -43,7 +44,7 @@ public class HttpResponseSerializer {
         .append("\r\n");
   }
 
-  private static void writeHttpCRLF(OutputStream outputStream) throws IOException {
+  public static void writeHttpCRLF(OutputStream outputStream) throws IOException {
     outputStream.write(Constants.HTTP_CRLF.getBytes(Constants.DEFAULT_CHARSET));
   }
 
@@ -64,9 +65,26 @@ public class HttpResponseSerializer {
     return header.toRaw() + Constants.HTTP_CRLF;
   }
 
-  private static void writeHeaders(StringBuilder builder, HttpResponse<?> response) {
-    response
-        .getHeaders()
-        .forEach(entry -> builder.append(serializeHeader(entry.getKey(), entry.getValue())));
+  public static void writeHeader(OutputStream outputStream, String key, String value)
+      throws IOException {
+    outputStream.write(serializeHeader(key, value).getBytes(Constants.DEFAULT_CHARSET));
+  }
+
+  private static void writeHeaders(StringBuilder builder, HttpHeaders headers) {
+    headers.forEach(entry -> builder.append(serializeHeader(entry.getKey(), entry.getValue())));
+  }
+
+  public static void writeHeaders(HttpHeaders headers, OutputStream outputStream)
+      throws IOException {
+    StringBuilder stringBuilder = new StringBuilder();
+    writeHeaders(stringBuilder, headers);
+
+    outputStream.write(stringBuilder.toString().getBytes(Constants.DEFAULT_CHARSET));
+  }
+
+  public static void writeEndOfHeaders(HttpHeaders headers, OutputStream outputStream)
+      throws IOException {
+    writeHeaders(headers, outputStream);
+    writeEndOfHeaders(outputStream);
   }
 }

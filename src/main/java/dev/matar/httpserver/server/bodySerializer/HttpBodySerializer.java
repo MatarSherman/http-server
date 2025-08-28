@@ -1,4 +1,4 @@
-package dev.matar.httpserver.server.serializer;
+package dev.matar.httpserver.server.bodySerializer;
 
 import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.HttpResponse;

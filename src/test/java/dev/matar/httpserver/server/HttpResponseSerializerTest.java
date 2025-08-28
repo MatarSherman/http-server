@@ -6,7 +6,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.*;
+import dev.matar.httpserver.model.server.serializer.body.BytesResource;
+import dev.matar.httpserver.model.server.serializer.body.FileResource;
+import dev.matar.httpserver.model.server.serializer.body.StreamResource;
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -93,23 +99,6 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseRequestWithBytesBody() throws IOException, HttpSerializationException {
-    byte[] body = "Hello World!".getBytes(Constants.DEFAULT_CHARSET);
-
-    VALID_RESPONSE.setBody(body);
-    HttpResponse<?> response = new HttpResponse<>(VALID_RESPONSE);
-    HttpResponseSerializer.serialize(VALID_RESPONSE, OUTPUT_STREAM);
-
-    response.getHeaders().set(HttpHeaderKey.CONTENT_TYPE.value(), MimeType.BINARY.value());
-    response.getHeaders().set(HttpHeaderKey.CONTENT_LENGTH.value(), "" + body.length);
-
-    ParsedHttpResponse expected =
-        ParsedHttpResponse.from(response, new String(body, Constants.DEFAULT_CHARSET));
-    ParsedHttpResponse actual = ParsedHttpResponse.parse(OUTPUT_STREAM.toByteArray());
-    assertEquals(expected, actual);
-  }
-
-  @Test
   void shouldParseRequestWithJSONBody() throws IOException, HttpSerializationException {
     record Person(String name, String lastName) {}
     Person body = new Person("Matar", "Sherman");
@@ -141,19 +130,37 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
+  void shouldParseRequestWithBytesBody() throws IOException, HttpSerializationException {
+    byte[] body = "Hello World!".getBytes(Constants.DEFAULT_CHARSET);
+
+    VALID_RESPONSE.setBody(new BytesResource(body));
+    HttpResponse<?> response = new HttpResponse<>(VALID_RESPONSE);
+    HttpResponseSerializer.serialize(VALID_RESPONSE, OUTPUT_STREAM);
+
+    response.getHeaders().set(HttpHeaderKey.CONTENT_TYPE.value(), MimeType.BINARY.value());
+    response.getHeaders().set(HttpHeaderKey.CONTENT_LENGTH.value(), "" + body.length);
+
+    ParsedHttpResponse expected =
+        ParsedHttpResponse.from(response, new String(body, Constants.DEFAULT_CHARSET));
+    ParsedHttpResponse actual = ParsedHttpResponse.parse(OUTPUT_STREAM.toByteArray());
+    assertEquals(expected, actual);
+  }
+
+  @Test
   void shouldParseRequestWithStreamBody() throws IOException, HttpSerializationException {
     String body = "Hello World!";
     byte[] bodyBytes = body.getBytes(Constants.DEFAULT_CHARSET);
     InputStream inputStream = new ByteArrayInputStream(bodyBytes);
+    StreamResource resourceBody = new StreamResource(inputStream);
 
-    VALID_RESPONSE.setBody(inputStream);
-    VALID_RESPONSE
-        .getHeaders()
-        .set(HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
+    VALID_RESPONSE.setBody(resourceBody);
 
     HttpResponse<?> response = new HttpResponse<>(VALID_RESPONSE);
     HttpResponseSerializer.serialize(VALID_RESPONSE, OUTPUT_STREAM);
     response.getHeaders().set(HttpHeaderKey.CONTENT_TYPE.value(), MimeType.BINARY.value());
+    response
+        .getHeaders()
+        .set(HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
 
     String chunkedBody =
         Integer.toHexString(bodyBytes.length)
@@ -168,6 +175,34 @@ public class HttpResponseSerializerTest {
     ParsedHttpResponse actual = ParsedHttpResponse.parse(OUTPUT_STREAM.toByteArray());
 
     assertEquals(expected, actual);
+  }
+
+  @Test
+  void shouldParseRequestWithFileBody() throws IOException, HttpSerializationException {
+    String fileString = "Hello World!";
+    Path tempFile = null;
+    try {
+      tempFile = Files.createTempFile(null, "file-body-test.txt");
+      byte[] fileBytes = fileString.getBytes(Constants.DEFAULT_CHARSET);
+      Files.write(tempFile, fileBytes);
+
+      int expectedContentLength = fileBytes.length;
+
+      VALID_RESPONSE.setBody(new FileResource(tempFile));
+      HttpResponseSerializer.serialize(VALID_RESPONSE, OUTPUT_STREAM);
+
+      HttpResponse<?> response = new HttpResponse<>(VALID_RESPONSE);
+      response.getHeaders().set(HttpHeaderKey.CONTENT_TYPE.value(), "text/plain");
+      response.getHeaders().set(HttpHeaderKey.CONTENT_LENGTH.value(), expectedContentLength + "");
+
+      ParsedHttpResponse expected = ParsedHttpResponse.from(response, fileString);
+      System.out.println(Arrays.toString(OUTPUT_STREAM.toByteArray()));
+      ParsedHttpResponse actual = ParsedHttpResponse.parse(OUTPUT_STREAM.toByteArray());
+
+      assertEquals(expected, actual, "Should parse response with file body");
+    } finally {
+      Files.deleteIfExists(tempFile);
+    }
   }
 
   @Test

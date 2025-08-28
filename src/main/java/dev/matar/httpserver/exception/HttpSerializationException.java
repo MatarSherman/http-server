@@ -4,4 +4,8 @@ public class HttpSerializationException extends Exception {
   public HttpSerializationException(String message, Throwable cause) {
     super(message, cause);
   }
+
+  public HttpSerializationException(String message) {
+    super(message);
+  }
 }

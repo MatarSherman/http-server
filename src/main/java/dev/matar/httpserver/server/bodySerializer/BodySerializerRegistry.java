@@ -1,4 +1,4 @@
-package dev.matar.httpserver.server.serializer;
+package dev.matar.httpserver.server.bodySerializer;
 
 import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.HttpResponse;
@@ -15,10 +15,9 @@ public class BodySerializerRegistry {
   private static final BodySerializerRegistry INSTANCE = new BodySerializerRegistry();
 
   private BodySerializerRegistry() {
+    serializers.add(new ResourceBodySerializer());
     serializers.add(new StringBodySerializer());
-    serializers.add(new BytesBodySerializer());
     serializers.add(new PrimitiveBodySerializer());
-    serializers.add(new StreamBodySerializer());
   }
 
   public void serialize(HttpResponse<?> response, OutputStream outputStream)
