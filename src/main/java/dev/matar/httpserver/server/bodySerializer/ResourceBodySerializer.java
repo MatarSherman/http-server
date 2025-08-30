@@ -29,9 +29,8 @@ public class ResourceBodySerializer implements HttpBodySerializer<ResourceBody> 
       HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
       serializeChunked(body, outputStream);
     } else {
-      if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_LENGTH.value())) {
-        contentHeaders.set(HttpHeaderKey.CONTENT_LENGTH.value(), body.getContentLength() + "");
-      }
+      contentHeaders.set(HttpHeaderKey.CONTENT_LENGTH.value(), body.getContentLength() + "");
+
       HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
       body.getInputStream().transferTo(outputStream);
     }

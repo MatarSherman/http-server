@@ -8,17 +8,8 @@ public class FileResource extends ResourceBody {
   private final Path file;
 
   public FileResource(Path file) throws IOException {
-    super(Files.newInputStream(file));
+    super(Files.newInputStream(file), Files.size(file));
     this.file = file;
-  }
-
-  @Override
-  public long getContentLength() {
-    try {
-      return Files.size(file);
-    } catch (IOException e) {
-      return -1;
-    }
   }
 
   @Override

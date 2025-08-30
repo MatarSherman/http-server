@@ -6,16 +6,11 @@ public class StreamResource extends ResourceBody {
   private String filename;
 
   public StreamResource(InputStream inputStream) {
-    super(inputStream);
+    super(inputStream, ResourceBody.UNKNOWN_CONTENT_LENGTH);
   }
 
   public void setFilename(String filename) {
     this.filename = filename;
-  }
-
-  @Override
-  public long getContentLength() {
-    return ResourceBody.UNKNOWN_CONTENT_LENGTH;
   }
 
   @Override

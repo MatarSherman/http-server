@@ -11,10 +11,12 @@ import java.io.InputStream;
 public abstract class ResourceBody {
   public static final int UNKNOWN_CONTENT_LENGTH = -1;
 
-  protected InputStream inputStream;
+  private InputStream inputStream;
+  private long contentLength;
 
-  protected ResourceBody(InputStream inputStream) {
+  public ResourceBody(InputStream inputStream, long contentLength) {
     this.inputStream = inputStream;
+    this.contentLength = contentLength;
   }
 
   public void setStream(InputStream inputStream) {
@@ -25,7 +27,13 @@ public abstract class ResourceBody {
     return this.inputStream;
   }
 
-  public abstract long getContentLength();
+  public long getContentLength() {
+    return this.contentLength;
+  }
+
+  public void setContentLength(long contentLength) {
+    this.contentLength = contentLength;
+  }
 
   public abstract String getFileName();
 

@@ -1,7 +1,8 @@
 package dev.matar.httpserver.model.http;
 
 public enum HttpHeaderValue {
-  TRANSFER_ENC_CHUNKED("chunked");
+  TRANSFER_ENC_CHUNKED("chunked"),
+  BYTES_RANGE("bytes");
 
   private final String value;
 
