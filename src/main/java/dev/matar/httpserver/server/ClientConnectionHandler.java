@@ -18,9 +18,11 @@ import java.util.Optional;
 
 public class ClientConnectionHandler {
   private final Routes routes;
+  private final StaticResourcesHandler staticResourcesHandler;
 
-  public ClientConnectionHandler(Routes routes) {
+  public ClientConnectionHandler(Routes routes, StaticResourcesHandler staticResourcesHandler) {
     this.routes = routes;
+    this.staticResourcesHandler = staticResourcesHandler;
   }
 
   public void handleSocket(Socket clientSocket) {
@@ -37,9 +39,16 @@ public class ClientConnectionHandler {
         System.out.println(
             "INFO: received request " + request.getMethod() + " " + request.getPath());
 
-        response = runRouteForRequest(request);
+        if (staticResourcesHandler.checkIsStaticResource(request)) {
+          response = staticResourcesHandler.getResourceResponse(request);
+          HttpMetadataHandler.configureStaticResource(request, response);
+        } else {
+          response = runRouteForRequest(request);
+          HttpMetadataHandler.configureResponse(request, response);
+        }
       } catch (HttpConnectionHandlingException e) {
         response = new HttpResponse<>(e.getStatus(), e.getStatusMessage());
+        HttpMetadataHandler.configureResponse(request, response);
       }
       sendResponseToClient(response, clientSocket, request);
     } catch (IOException e) {
