@@ -1,8 +1,8 @@
 package dev.matar.httpserver;
 
-import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.model.http.HttpMethod;
 import dev.matar.httpserver.model.http.HttpResponse;
+import dev.matar.httpserver.model.server.serializer.body.StreamResource;
 import dev.matar.httpserver.server.Server;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -27,10 +27,8 @@ public class Main {
           HttpMethod.GET,
           "/messageStream",
           _ -> {
-            InputStream stream =
-                new ByteArrayInputStream("Hello World!".getBytes(Constants.DEFAULT_CHARSET));
-
-            return new HttpResponse<>(200, "my-message", stream);
+            InputStream stream = new ByteArrayInputStream("Hello World!".getBytes());
+            return new HttpResponse<>(200, "my-message", new StreamResource(stream));
           });
       server.start();
     } catch (IOException e) {
