@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.exception.HttpSerializationException;
+import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.model.server.serializer.body.BytesResource;
 import dev.matar.httpserver.model.server.serializer.body.FileResource;
@@ -36,7 +36,7 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseValidResponseNoBody() throws IOException, HttpSerializationException {
+  void shouldParseValidResponseNoBody() throws IOException, HttpBodySerializationException {
     HttpResponseSerializer.serialize(VALID_RESPONSE, OUTPUT_STREAM);
 
     ParsedHttpResponse expected = ParsedHttpResponse.from(VALID_RESPONSE, null);
@@ -51,7 +51,7 @@ public class HttpResponseSerializerTest {
 
   @ParameterizedTest
   @MethodSource("primitiveBodyProvider")
-  void shouldParsePrimitiveBody(Object body) throws IOException, HttpSerializationException {
+  void shouldParsePrimitiveBody(Object body) throws IOException, HttpBodySerializationException {
     VALID_RESPONSE.setBody(body);
 
     HttpResponse<?> response = new HttpResponse<>(VALID_RESPONSE);
@@ -74,7 +74,7 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseRequestWithStringBody() throws IOException, HttpSerializationException {
+  void shouldParseRequestWithStringBody() throws IOException, HttpBodySerializationException {
     VALID_RESPONSE
         .getHeaders()
         .set(
@@ -99,7 +99,7 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseRequestWithJSONBody() throws IOException, HttpSerializationException {
+  void shouldParseRequestWithJSONBody() throws IOException, HttpBodySerializationException {
     record Person(String name, String lastName) {}
     Person body = new Person("Matar", "Sherman");
     VALID_RESPONSE.setBody(body);
@@ -130,7 +130,7 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseRequestWithBytesBody() throws IOException, HttpSerializationException {
+  void shouldParseRequestWithBytesBody() throws IOException, HttpBodySerializationException {
     byte[] body = "Hello World!".getBytes(Constants.DEFAULT_CHARSET);
 
     VALID_RESPONSE.setBody(new BytesResource(body));
@@ -147,7 +147,7 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseRequestWithStreamBody() throws IOException, HttpSerializationException {
+  void shouldParseRequestWithStreamBody() throws IOException, HttpBodySerializationException {
     String body = "Hello World!";
     byte[] bodyBytes = body.getBytes(Constants.DEFAULT_CHARSET);
     InputStream inputStream = new ByteArrayInputStream(bodyBytes);
@@ -178,7 +178,7 @@ public class HttpResponseSerializerTest {
   }
 
   @Test
-  void shouldParseRequestWithFileBody() throws IOException, HttpSerializationException {
+  void shouldParseRequestWithFileBody() throws IOException, HttpBodySerializationException {
     String fileString = "Hello World!";
     Path tempFile = null;
     try {
@@ -232,7 +232,7 @@ public class HttpResponseSerializerTest {
         };
     VALID_RESPONSE.setBody(unsupportedBody);
     assertThrows(
-        HttpSerializationException.class,
+        HttpBodySerializationException.class,
         () -> HttpResponseSerializer.serialize(VALID_RESPONSE, OUTPUT_STREAM));
   }
 }

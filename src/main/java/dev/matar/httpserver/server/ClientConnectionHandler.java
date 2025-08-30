@@ -2,10 +2,10 @@ package dev.matar.httpserver.server;
 
 import static dev.matar.httpserver.server.HttpRequestDeserializer.deserialize;
 
+import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.exception.HttpConnectionHandlingException;
 import dev.matar.httpserver.exception.HttpDeserializationException;
 import dev.matar.httpserver.exception.HttpRequestSizeLimitException;
-import dev.matar.httpserver.exception.HttpSerializationException;
 import dev.matar.httpserver.model.http.HttpRequest;
 import dev.matar.httpserver.model.http.HttpResponse;
 import dev.matar.httpserver.model.http.HttpStatus;
@@ -44,6 +44,8 @@ public class ClientConnectionHandler {
       sendResponseToClient(response, clientSocket, request);
     } catch (IOException e) {
       System.out.println("INFO: connection failed for client socket, " + e);
+    } catch (HttpBodySerializationException e) {
+      System.out.println("ERROR: body serialization failed, aborting client socket connection");
     }
   }
 
@@ -80,19 +82,8 @@ public class ClientConnectionHandler {
   }
 
   private void sendResponseToClient(
-      HttpResponse<?> response, Socket clientSocket, HttpRequest request) throws IOException {
-    HttpMetadataHandler.configureResponse(request, response);
-    try {
-      HttpResponseSerializer.serialize(response, clientSocket.getOutputStream());
-    } catch (HttpSerializationException e) {
-      System.out.println("INFO: could not serialize response. returning status 500.");
-      handleBadResponse(clientSocket);
-    }
-  }
-
-  private void handleBadResponse(Socket socket) throws IOException {
-    HttpResponse<?> response = new HttpResponse<>(HttpStatus.INTERNAL_ERROR, "Internal Error");
-    HttpMetadataHandler.configureResponse(response);
-    HttpResponseSerializer.serializeWithoutBody(response, socket.getOutputStream());
+      HttpResponse<?> response, Socket clientSocket, HttpRequest request)
+      throws IOException, HttpBodySerializationException {
+    HttpResponseSerializer.serialize(response, clientSocket.getOutputStream());
   }
 }

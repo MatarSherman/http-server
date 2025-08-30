@@ -1,6 +1,6 @@
 package dev.matar.httpserver.server.bodySerializer;
 
-import dev.matar.httpserver.exception.HttpSerializationException;
+import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.model.http.HttpResponse;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
@@ -21,7 +21,7 @@ public class BodySerializerRegistry {
   }
 
   public void serialize(HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, HttpSerializationException {
+      throws IOException, HttpBodySerializationException {
     Object body = response.getBody();
     if (body == null) {
       HttpResponseSerializer.writeEndOfHeaders(outputStream);
@@ -46,7 +46,7 @@ public class BodySerializerRegistry {
       Object body,
       HttpResponse<?> response,
       OutputStream outputStream)
-      throws IOException, HttpSerializationException {
+      throws IOException, HttpBodySerializationException {
     serializer.serialize((T) body, response, outputStream);
   }
 

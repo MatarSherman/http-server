@@ -3,7 +3,7 @@ package dev.matar.httpserver.server.bodySerializer;
 import com.fasterxml.jackson.core.JacksonException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.exception.HttpSerializationException;
+import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
@@ -18,12 +18,13 @@ public class JSONBodySerializer implements HttpBodySerializer<Object> {
 
   @Override
   public void serialize(Object body, HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, HttpSerializationException {
+      throws IOException, HttpBodySerializationException {
     byte[] result;
     try {
       result = objectMapper.writeValueAsBytes(body);
     } catch (JacksonException e) {
-      throw new HttpSerializationException("ERROR: failed to serialize body using Jackson, ", e);
+      throw new HttpBodySerializationException(
+          "ERROR: failed to serialize body using Jackson, ", e);
     }
     HttpHeaders contentHeaders = new HttpHeaders();
     if (!response.getHeaders().containsKey(HttpHeaderKey.CONTENT_TYPE.value())) {

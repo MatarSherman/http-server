@@ -1,7 +1,7 @@
 package dev.matar.httpserver.server;
 
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.exception.HttpSerializationException;
+import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.model.http.HttpHeader;
 import dev.matar.httpserver.model.http.HttpHeaders;
 import dev.matar.httpserver.model.http.HttpResponse;
@@ -18,7 +18,7 @@ public class HttpResponseSerializer {
   }
 
   public static void serialize(HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, HttpSerializationException {
+      throws IOException, HttpBodySerializationException {
     writeFirstLineAndHeaders(response, outputStream);
 
     BodySerializerRegistry bodySerializer = BodySerializerRegistry.get();

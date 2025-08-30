@@ -1,7 +1,7 @@
 package dev.matar.httpserver.server.bodySerializer;
 
 import dev.matar.httpserver.config.Constants;
-import dev.matar.httpserver.exception.HttpSerializationException;
+import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
@@ -27,7 +27,7 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
 
   @Override
   public void serialize(String body, HttpResponse<?> response, OutputStream outputStream)
-      throws IOException, HttpSerializationException {
+      throws IOException, HttpBodySerializationException {
     Charset charset = Constants.DEFAULT_CHARSET;
     String contentType =
         response
@@ -35,7 +35,7 @@ public class StringBodySerializer implements HttpBodySerializer<String> {
             .getFirst(HttpHeaderKey.CONTENT_TYPE.value())
             .orElseThrow(
                 () ->
-                    new HttpSerializationException(
+                    new HttpBodySerializationException(
                         "ERROR: String body serialization executed without content-type header"));
     Optional<String> charsetName = extractCharset(contentType);
     if (charsetName.isPresent() && Charset.isSupported(charsetName.get())) {
