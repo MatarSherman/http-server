@@ -8,13 +8,8 @@ public class FileResource extends ResourceBody {
   private final Path file;
 
   public FileResource(Path file) throws IOException {
-    super(new BasicResourceInputStream(Files.newInputStream(file)));
+    super(Files.newInputStream(file));
     this.file = file;
-  }
-
-  @Override
-  public ResourceInputStream getInputStream() throws IOException {
-    return this.inputStream;
   }
 
   @Override

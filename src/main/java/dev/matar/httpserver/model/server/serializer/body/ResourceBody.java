@@ -1,7 +1,6 @@
 package dev.matar.httpserver.model.server.serializer.body;
 
-import java.io.IOException;
-import java.util.function.Function;
+import java.io.InputStream;
 
 /**
  * Represents HTTP response bodies that are more complex than primitives and POJO'S.
@@ -12,17 +11,19 @@ import java.util.function.Function;
 public abstract class ResourceBody {
   public static final int UNKNOWN_CONTENT_LENGTH = -1;
 
-  protected ResourceInputStream inputStream;
+  protected InputStream inputStream;
 
-  protected ResourceBody(ResourceInputStream inputStream) {
+  protected ResourceBody(InputStream inputStream) {
     this.inputStream = inputStream;
   }
 
-  public void wrapStream(Function<ResourceInputStream, RangedResourceInputStream> streamWrapper) {
-    this.inputStream = streamWrapper.apply(inputStream);
+  public void setStream(InputStream inputStream) {
+    this.inputStream = inputStream;
   }
 
-  public abstract ResourceInputStream getInputStream() throws IOException;
+  public InputStream getInputStream() {
+    return this.inputStream;
+  }
 
   public abstract long getContentLength();
 

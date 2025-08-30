@@ -1,22 +1,16 @@
 package dev.matar.httpserver.model.server.serializer.body;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 public class StreamResource extends ResourceBody {
   private String filename;
 
   public StreamResource(InputStream inputStream) {
-    super(new BasicResourceInputStream(inputStream));
+    super(inputStream);
   }
 
   public void setFilename(String filename) {
     this.filename = filename;
-  }
-
-  @Override
-  public ResourceInputStream getInputStream() throws IOException {
-    return inputStream;
   }
 
   @Override

@@ -1,4 +1,4 @@
-package dev.matar.httpserver.model.server.serializer.body;
+package dev.matar.httpserver.util;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public class RangedResourceInputStreamTest {
+public class RangedInputStreamTest {
   private static byte[] testDataSource = new byte[0];
   private static ByteArrayInputStream inputStream;
 
@@ -30,11 +30,11 @@ public class RangedResourceInputStreamTest {
     byte[] expected = new byte[RANGE_LENGTH];
     System.arraycopy(testDataSource, RANGE_START, expected, 0, RANGE_LENGTH);
 
-    RangedResourceInputStream rangedResourceInputStream =
-        new RangedResourceInputStream(inputStream, RANGE_START, RANGE_LENGTH);
+    RangedInputStream rangedInputStream =
+        new RangedInputStream(inputStream, RANGE_START, RANGE_LENGTH);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    long bytesTransferred = rangedResourceInputStream.transferTo(outputStream);
+    long bytesTransferred = rangedInputStream.transferTo(outputStream);
 
     new String(expected);
     assertArrayEquals(
@@ -51,11 +51,11 @@ public class RangedResourceInputStreamTest {
     int RANGE_LENGTH = testDataSource.length * 2;
     byte[] expected = testDataSource;
 
-    RangedResourceInputStream rangedResourceInputStream =
-        new RangedResourceInputStream(inputStream, RANGE_START, RANGE_LENGTH);
+    RangedInputStream rangedInputStream =
+        new RangedInputStream(inputStream, RANGE_START, RANGE_LENGTH);
     ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 
-    rangedResourceInputStream.transferTo(outputStream);
+    rangedInputStream.transferTo(outputStream);
 
     assertArrayEquals(
         expected,
@@ -67,7 +67,7 @@ public class RangedResourceInputStreamTest {
   void shouldThrowOnIllegalArgs() {
     assertThrows(
         IllegalArgumentException.class,
-        () -> new RangedResourceInputStream(inputStream, 0, -5),
+        () -> new RangedInputStream(inputStream, 0, -5),
         "Should throw on negative range length");
   }
 }
