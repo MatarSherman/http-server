@@ -3,9 +3,9 @@ package dev.matar.httpserver.server.bodySerializer;
 import dev.matar.httpserver.config.Constants;
 import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.model.server.serializer.body.ResourceBody;
-import dev.matar.httpserver.model.server.serializer.body.ResourceInputStream;
 import dev.matar.httpserver.server.HttpResponseSerializer;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,10 +22,9 @@ public class ResourceBodySerializer implements HttpBodySerializer<ResourceBody> 
     }
     long contentLength = body.getContentLength();
     if (contentLength == ResourceBody.UNKNOWN_CONTENT_LENGTH) {
-      if (!response.getHeaders().containsKey(HttpHeaderKey.TRANSFER_ENCODING.value())) {
-        contentHeaders.set(
-            HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
-      }
+      contentHeaders.set(
+          HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
+
       HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
       serializeChunked(body, outputStream);
     } else {
@@ -37,7 +36,7 @@ public class ResourceBodySerializer implements HttpBodySerializer<ResourceBody> 
   }
 
   public void serializeChunked(ResourceBody body, OutputStream outputStream) throws IOException {
-    ResourceInputStream inputStream = body.getInputStream();
+    InputStream inputStream = body.getInputStream();
     int CHUNK_SIZE = 4096;
     byte[] chunk = new byte[CHUNK_SIZE];
 
