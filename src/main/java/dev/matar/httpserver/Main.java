@@ -30,9 +30,10 @@ public class Main {
             InputStream stream = new ByteArrayInputStream("Hello World!".getBytes());
             return new HttpResponse<>(200, "my-message", new StreamResource(stream));
           });
+      server.setStaticResources("/resource/", "src/main/resources");
       server.start();
     } catch (IOException e) {
-      System.out.println("ERROR: could not start server");
+      System.out.println("ERROR: could not start server" + e);
     }
   }
 }
