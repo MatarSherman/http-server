@@ -23,6 +23,7 @@ public class HttpResponseSerializer {
 
     BodySerializerRegistry bodySerializer = BodySerializerRegistry.get();
     bodySerializer.serialize(response, outputStream);
+    outputStream.flush();
   }
 
   private static void writeFirstLineAndHeaders(HttpResponse<?> response, OutputStream outputStream)
