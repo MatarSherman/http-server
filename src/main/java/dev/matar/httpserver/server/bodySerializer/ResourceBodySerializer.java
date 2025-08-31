@@ -21,22 +21,23 @@ public class ResourceBodySerializer implements HttpBodySerializer<ResourceBody> 
       contentHeaders.set(HttpHeaderKey.CONTENT_TYPE.value(), getContentType(body));
     }
     long contentLength = body.getContentLength();
-    if (contentLength == ResourceBody.UNKNOWN_CONTENT_LENGTH) {
-      contentHeaders.set(
-          HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
+    try (InputStream inputStream = body.getInputStream()) {
+      if (contentLength == ResourceBody.UNKNOWN_CONTENT_LENGTH) {
+        contentHeaders.set(
+            HttpHeaderKey.TRANSFER_ENCODING.value(), HttpHeaderValue.TRANSFER_ENC_CHUNKED.value());
 
-      HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
-      serializeChunked(body, outputStream);
-    } else {
-      contentHeaders.set(HttpHeaderKey.CONTENT_LENGTH.value(), body.getContentLength() + "");
+        HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
+        serializeChunked(inputStream, outputStream);
+      } else {
+        contentHeaders.set(HttpHeaderKey.CONTENT_LENGTH.value(), body.getContentLength() + "");
 
-      HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
-      body.getInputStream().transferTo(outputStream);
+        HttpResponseSerializer.writeEndOfHeaders(contentHeaders, outputStream);
+        inputStream.transferTo(outputStream);
+      }
     }
   }
 
-  public void serializeChunked(ResourceBody body, OutputStream outputStream) throws IOException {
-    InputStream inputStream = body.getInputStream();
+  public void serializeChunked(InputStream inputStream, OutputStream outputStream) throws IOException {
     int CHUNK_SIZE = 4096;
     byte[] chunk = new byte[CHUNK_SIZE];
 
