@@ -18,11 +18,10 @@ public class HttpRequestDeserializer {
   public static final int MAX_HEADERS_AMOUNT = 100;
   public static final int MAX_BODY_SIZE = 1_048_576;
 
-  public static Optional<HttpRequest> deserialize(final InputStream socketInput)
+  public static Optional<HttpRequest> deserialize(HttpStreamReader httpStreamReader)
       throws IOException, HttpDeserializationException, HttpRequestSizeLimitException {
     HttpRequest.Builder builder = HttpRequest.builder();
     RequestMetadata metadata = new RequestMetadata(-1, false, false);
-    final HttpStreamReader httpStreamReader = new HttpStreamReader(socketInput);
 
     try {
       String firstLine = httpStreamReader.readLine(MAX_FIRST_LINE_LENGTH);

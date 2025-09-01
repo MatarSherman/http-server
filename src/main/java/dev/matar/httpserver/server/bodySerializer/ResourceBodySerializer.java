@@ -37,7 +37,8 @@ public class ResourceBodySerializer implements HttpBodySerializer<ResourceBody> 
     }
   }
 
-  public void serializeChunked(InputStream inputStream, OutputStream outputStream) throws IOException {
+  public void serializeChunked(InputStream inputStream, OutputStream outputStream)
+      throws IOException {
     int CHUNK_SIZE = 4096;
     byte[] chunk = new byte[CHUNK_SIZE];
 

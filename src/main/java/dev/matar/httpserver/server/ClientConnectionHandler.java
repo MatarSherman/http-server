@@ -6,9 +6,7 @@ import dev.matar.httpserver.exception.HttpBodySerializationException;
 import dev.matar.httpserver.exception.HttpConnectionHandlingException;
 import dev.matar.httpserver.exception.HttpDeserializationException;
 import dev.matar.httpserver.exception.HttpRequestSizeLimitException;
-import dev.matar.httpserver.model.http.HttpRequest;
-import dev.matar.httpserver.model.http.HttpResponse;
-import dev.matar.httpserver.model.http.HttpStatus;
+import dev.matar.httpserver.model.http.*;
 import dev.matar.httpserver.model.server.Route;
 import dev.matar.httpserver.model.server.Routes;
 import dev.matar.httpserver.server.metadata.HttpMetadataHandler;
@@ -27,30 +25,25 @@ public class ClientConnectionHandler {
 
   public void handleSocket(Socket clientSocket) {
     try (clientSocket) {
+      HttpStreamReader httpStreamReader = new HttpStreamReader(clientSocket.getInputStream());
       HttpResponse<?> response;
       HttpRequest request = null;
-      try {
-        Optional<HttpRequest> optionalRequest = deserializeRequest(clientSocket);
-        if (optionalRequest.isEmpty()) {
-          System.out.println("DEBUG: received an empty HTTP request, closing socket.");
-          return;
+      do {
+        try {
+          Optional<HttpRequest> optionalRequest = deserializeRequest(httpStreamReader);
+          if (optionalRequest.isEmpty()) {
+            System.out.println("DEBUG: received an empty HTTP request, closing socket.");
+            return;
+          }
+          request = optionalRequest.get();
+          System.out.println(
+              "INFO: received request " + request.getMethod() + " " + request.getPath());
+          response = generateResponse(request);
+        } catch (HttpConnectionHandlingException e) {
+          response = generateResponse(request, e);
         }
-        request = optionalRequest.get();
-        System.out.println(
-            "INFO: received request " + request.getMethod() + " " + request.getPath());
-
-        if (staticResourcesHandler.checkIsStaticResource(request)) {
-          response = staticResourcesHandler.getResourceResponse(request);
-          HttpMetadataHandler.configureStaticResource(request, response);
-        } else {
-          response = runRouteForRequest(request);
-          HttpMetadataHandler.configureResponse(request, response);
-        }
-      } catch (HttpConnectionHandlingException e) {
-        response = new HttpResponse<>(e.getStatus(), e.getStatusMessage());
-        HttpMetadataHandler.configureResponse(request, response);
-      }
-      sendResponseToClient(response, clientSocket, request);
+        sendResponseToClient(response, clientSocket);
+      } while (checkIsKeepAlive(response));
     } catch (IOException e) {
       System.out.println("INFO: connection failed for client socket, " + e);
     } catch (HttpBodySerializationException e) {
@@ -58,10 +51,10 @@ public class ClientConnectionHandler {
     }
   }
 
-  private Optional<HttpRequest> deserializeRequest(Socket socket)
+  private Optional<HttpRequest> deserializeRequest(HttpStreamReader httpStreamReader)
       throws IOException, HttpConnectionHandlingException {
     try {
-      return deserialize(socket.getInputStream());
+      return deserialize(httpStreamReader);
     } catch (HttpRequestSizeLimitException e) {
       System.out.println("INFO: deserialization aborted due to exceeded request size limit, " + e);
       throw new HttpConnectionHandlingException(e.getHttpStatus(), "Request Too Large", e);
@@ -71,8 +64,29 @@ public class ClientConnectionHandler {
     }
   }
 
+  private HttpResponse<?> generateResponse(HttpRequest request)
+      throws HttpConnectionHandlingException, IOException {
+    HttpResponse<?> response;
+    if (staticResourcesHandler.checkIsStaticResource(request)) {
+      response = staticResourcesHandler.getResourceResponse(request);
+      HttpMetadataHandler.configureStaticResource(request, response);
+    } else {
+      response = runRouteForRequest(request);
+      HttpMetadataHandler.configureResponse(request, response);
+    }
+    return response;
+  }
+
+  private HttpResponse<?> generateResponse(HttpRequest request, HttpConnectionHandlingException e) {
+    HttpResponse<?> response = new HttpResponse<>(e.getStatus(), e.getStatusMessage());
+    if (request != null) {
+      HttpMetadataHandler.configureResponse(request, response);
+    }
+    return response;
+  }
+
   private HttpResponse<?> runRouteForRequest(HttpRequest request)
-      throws IOException, HttpConnectionHandlingException {
+      throws HttpConnectionHandlingException {
     Optional<Route> route = this.routes.getRoute(request);
     if (route.isEmpty()) {
       throw new HttpConnectionHandlingException(HttpStatus.NOT_FOUND, "Not Found");
@@ -90,9 +104,14 @@ public class ClientConnectionHandler {
     }
   }
 
-  private void sendResponseToClient(
-      HttpResponse<?> response, Socket clientSocket, HttpRequest request)
+  private void sendResponseToClient(HttpResponse<?> response, Socket clientSocket)
       throws IOException, HttpBodySerializationException {
     HttpResponseSerializer.serialize(response, clientSocket.getOutputStream());
+  }
+
+  private boolean checkIsKeepAlive(HttpResponse<?> response) {
+    String keepAlive = response.getHeaders().getFirst(HttpHeaderKey.CONNECTION.value()).orElse("");
+
+    return keepAlive.equalsIgnoreCase(HttpHeaderValue.KEEP_ALIVE.value());
   }
 }

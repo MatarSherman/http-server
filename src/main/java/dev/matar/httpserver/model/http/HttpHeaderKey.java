@@ -7,7 +7,8 @@ public enum HttpHeaderKey {
   TRAILER("Trailer"),
   RANGE("Range"),
   CONTENT_RANGE("Content-Range"),
-  ACCEPT_RANGES("Accept-Ranges");
+  ACCEPT_RANGES("Accept-Ranges"),
+  CONNECTION("Connection");
 
   private final String value;
 
